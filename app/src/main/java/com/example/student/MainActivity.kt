@@ -22,14 +22,14 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.example.student.navigation.Screen
 import com.example.student.ui.screens.*
-import com.example.myproject.ui.theme.MyProjectTheme
-import com.example.myproject.viewmodel.EstudiantesViewModel
+import com.example.student.ui.theme.StudentTheme
+import com.example.student.viewmodel.EstudiantesViewModel
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
-            MyProjectTheme {
+            StudentTheme {
                 MainApp()
             }
         }
@@ -41,7 +41,6 @@ class MainActivity : ComponentActivity() {
 fun MainApp(viewModel: EstudiantesViewModel = viewModel()) {
     val navController = rememberNavController()
 
-    // Definición de las pestañas de la barra inferior
     val items = listOf(Screen.Dashboard, Screen.Promedios)
 
     Scaffold(
@@ -57,7 +56,7 @@ fun MainApp(viewModel: EstudiantesViewModel = viewModel()) {
                             val icon = when (screen) {
                                 Screen.Dashboard -> Icons.Filled.List
                                 Screen.Promedios -> Icons.Filled.Settings
-                                else -> Icons.Filled.List // Fallback
+                                else -> Icons.Filled.List
                             }
                             Icon(icon, contentDescription = screen.route)
                         },
@@ -65,13 +64,10 @@ fun MainApp(viewModel: EstudiantesViewModel = viewModel()) {
                         selected = selected,
                         onClick = {
                             navController.navigate(screen.route) {
-                                // Evita construir una gran pila de destinos en la pila posterior
                                 popUpTo(navController.graph.findStartDestination().id) {
                                     saveState = true
                                 }
-                                // Evita múltiples copias del mismo destino
                                 launchSingleTop = true
-                                // Restaura el estado al cambiar de pestaña
                                 restoreState = true
                             }
                         }
@@ -94,17 +90,14 @@ fun MainApp(viewModel: EstudiantesViewModel = viewModel()) {
             startDestination = Screen.Dashboard.route,
             modifier = Modifier.padding(innerPadding)
         ) {
-            // Pestañas principales
             composable(Screen.Dashboard.route) {
-                EstudiantesDashboardScreen(navController, viewModel)
+               Dashboard(navController, viewModel)
             }
             composable(Screen.Promedios.route) {
-                CalculoPromediosScreen(viewModel)
+                CalculoPromedio(viewModel)
             }
-
-            // Pantalla de formulario (navegación profunda)
             composable(Screen.AgregarEstudiante.route) {
-                AgregarEstudianteScreen(navController, viewModel)
+                AgregarEstudiante(navController, viewModel)
             }
         }
     }
