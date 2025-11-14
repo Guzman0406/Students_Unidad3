@@ -1,68 +1,82 @@
 package com.example.student.viewmodel
-<<<<<<< HEAD
-=======
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.student.data.Estudiante
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
 class EstudiantesViewModel : ViewModel() {
-    private val _estudiantes = MutableStateFlow(emptyList<Estudiante>())
-    val estudiantes: StateFlow<List<Estudiante>> = _estudiantes
 
-    private val _promedioGeneral = MutableStateFlow(0.0)
-    val promedioGeneral: StateFlow<Double> = _promedioGeneral
+    private val _estudiantes = MutableStateFlow<List<Estudiante>>(emptyList())
+    val estudiantes: StateFlow<List<Estudiante>> = _estudiantes.asStateFlow()
 
-    private val _mayorRezago = MutableStateFlow<Estudiante?>(null)
-    val mayorRezago: StateFlow<Estudiante?> = _mayorRezago
+    private var currentId = 1
 
-    private var nextId = 0
 
-    init {
-        _estudiantes.value = listOf(
-            Estudiante(nextId++, "Juan Pérez", "A", 7.5),
-            Estudiante(nextId++, "Ana García", "B", 9.2),
-            Estudiante(nextId++, "Carlos Lopez", "A", 6.0),
-            Estudiante(nextId++, "Sofía Ruiz", "C", 8.8)
-        )
-        calcularEstadisticas()
+    fun agregarEstudiante(estudiante: Estudiante) {
+        viewModelScope.launch {
+            val nuevaLista = _estudiantes.value.toMutableList()
+            val estudianteConId = if (estudiante.id == 0) {
+                estudiante.copy(id = currentId++)
+            } else {
+                estudiante
+            }
+            nuevaLista.add(estudianteConId)
+            _estudiantes.value = nuevaLista
+        }
     }
 
-    fun agregarEstudiante(nombre: String, grupo: String, promedio: String) = viewModelScope.launch {
-        val nuevoEstudiante = Estudiante(
-            id = nextId++,
-            nombre = nombre,
-            grupo = grupo,
-            promedio = promedio.toDoubleOrNull() ?: 0.0
-        )
-        _estudiantes.update { currentList ->
-            currentList + nuevoEstudiante
+    fun actualizarEstudiante(estudiante: Estudiante) {
+        viewModelScope.launch {
+            val nuevaLista = _estudiantes.value.toMutableList()
+            val index = nuevaLista.indexOfFirst { it.id == estudiante.id }
+            if (index != -1) {
+                nuevaLista[index] = estudiante
+                _estudiantes.value = nuevaLista
+            }
         }
-        calcularEstadisticas()
     }
 
-    fun eliminarEstudiante(estudianteId: Int) = viewModelScope.launch {
-        _estudiantes.update { currentList ->
-            currentList.filter { it.id != estudianteId }
+    fun eliminarEstudiante(id: Int) {
+        viewModelScope.launch {
+            val nuevaLista = _estudiantes.value.toMutableList()
+            nuevaLista.removeAll { it.id == id }
+            _estudiantes.value = nuevaLista
         }
-        calcularEstadisticas()
     }
 
-    private fun calcularEstadisticas() {
-        val currentList = _estudiantes.value
-        if (currentList.isEmpty()) {
-            _promedioGeneral.value = 0.0
-            _mayorRezago.value = null
-            return
-        }
+    fun obtenerEstudiantePorId(id: Int): Estudiante? {
+        return _estudiantes.value.find { it.id == id }
+    }
 
-        val sumatoria = currentList.sumOf { it.promedio }
-        _promedioGeneral.value = sumatoria / currentList.size
-        _mayorRezago.value = currentList.minByOrNull { it.promedio }
+    // Cálculos
+    fun calcularPromedioGeneral(): Double {
+        val estudiantes = _estudiantes.value
+        if (estudiantes.isEmpty()) return 0.0
+        return estudiantes.map { it.puntuaje }.average()
+    }
+
+    fun obtenerEstudianteConMayorPuntuaje(): Estudiante? {
+        return _estudiantes.value.maxByOrNull { it.puntuaje }
+    }
+
+    fun obtenerTop3PorGrupo(grupo: String): List<Estudiante> {
+        return _estudiantes.value
+            .filter { it.grupo == grupo }
+            .sortedByDescending { it.puntuaje }
+            .take(3)
+    }
+
+    fun obtenerGrupos(): List<String> {
+        return _estudiantes.value.map { it.grupo }.distinct()
+    }
+
+    fun calcularPromedioPorGrupo(grupo: String): Double {
+        val estudiantesGrupo = _estudiantes.value.filter { it.grupo == grupo }
+        if (estudiantesGrupo.isEmpty()) return 0.0
+        return estudiantesGrupo.map { it.puntuaje }.average()
     }
 }
->>>>>>> 8e26fa136511eba0b64407c01b4b1b9774570c56

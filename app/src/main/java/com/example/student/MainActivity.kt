@@ -6,13 +6,12 @@ import androidx.activity.compose.setContent
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.List
-import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material.icons.filled.Assessment
+import androidx.compose.material.icons.filled.Person
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.res.stringResource
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavDestination.Companion.hierarchy
 import androidx.navigation.NavGraph.Companion.findStartDestination
@@ -21,15 +20,17 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.example.student.navigation.Screen
-import com.example.student.ui.screens.*
-import com.example.myproject.ui.theme.MyProjectTheme
-import com.example.myproject.viewmodel.EstudiantesViewModel
+import com.example.student.ui.screens.AgregarEstudiantesScreen
+import com.example.student.ui.screens.CalculoPromedioScreen
+import com.example.student.ui.screens.DashboardScreen
+import com.example.student.ui.theme.StudentTheme
+import com.example.student.viewmodel.EstudiantesViewModel
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
-            MyProjectTheme {
+            StudentTheme {
                 MainApp()
             }
         }
@@ -40,43 +41,40 @@ class MainActivity : ComponentActivity() {
 @Composable
 fun MainApp(viewModel: EstudiantesViewModel = viewModel()) {
     val navController = rememberNavController()
-
-    // Definición de las pestañas de la barra inferior
-    val items = listOf(Screen.Dashboard, Screen.Promedios)
+    val navBackStackEntry by navController.currentBackStackEntryAsState()
+    val currentDestination = navBackStackEntry?.destination
 
     Scaffold(
         bottomBar = {
             NavigationBar {
-                val navBackStackEntry by navController.currentBackStackEntryAsState()
-                val currentDestination = navBackStackEntry?.destination
-
-                items.forEach { screen ->
-                    val selected = currentDestination?.hierarchy?.any { it.route == screen.route } == true
-                    NavigationBarItem(
-                        icon = {
-                            val icon = when (screen) {
-                                Screen.Dashboard -> Icons.Filled.List
-                                Screen.Promedios -> Icons.Filled.Settings
-                                else -> Icons.Filled.List // Fallback
+                NavigationBarItem(
+                    icon = { Icon(Icons.Filled.Person, contentDescription = "Estudiantes") },
+                    label = { Text("Estudiantes") },
+                    selected = currentDestination?.route == Screen.Dashboard.route,
+                    onClick = {
+                        navController.navigate(Screen.Dashboard.route) {
+                            popUpTo(navController.graph.findStartDestination().id) {
+                                saveState = true
                             }
-                            Icon(icon, contentDescription = screen.route)
-                        },
-                        label = { Text(screen.route.capitalize()) },
-                        selected = selected,
-                        onClick = {
-                            navController.navigate(screen.route) {
-                                // Evita construir una gran pila de destinos en la pila posterior
-                                popUpTo(navController.graph.findStartDestination().id) {
-                                    saveState = true
-                                }
-                                // Evita múltiples copias del mismo destino
-                                launchSingleTop = true
-                                // Restaura el estado al cambiar de pestaña
-                                restoreState = true
-                            }
+                            launchSingleTop = true
+                            restoreState = true
                         }
-                    )
-                }
+                    }
+                )
+                NavigationBarItem(
+                    icon = { Icon(Icons.Filled.Assessment, contentDescription = "Promedios") }, // ✅ CORREGIDO
+                    label = { Text("Promedios") },
+                    selected = currentDestination?.route == Screen.Promedios.route,
+                    onClick = {
+                        navController.navigate(Screen.Promedios.route) {
+                            popUpTo(navController.graph.findStartDestination().id) {
+                                saveState = true
+                            }
+                            launchSingleTop = true
+                            restoreState = true
+                        }
+                    }
+                )
             }
         },
         floatingActionButton = {
@@ -84,7 +82,7 @@ fun MainApp(viewModel: EstudiantesViewModel = viewModel()) {
                 FloatingActionButton(
                     onClick = { navController.navigate(Screen.AgregarEstudiante.route) }
                 ) {
-                    Icon(Icons.Filled.Add, "Agregar Estudiante")
+                    Icon(Icons.Filled.Add, contentDescription = "Agregar Estudiante")
                 }
             }
         }
@@ -94,17 +92,14 @@ fun MainApp(viewModel: EstudiantesViewModel = viewModel()) {
             startDestination = Screen.Dashboard.route,
             modifier = Modifier.padding(innerPadding)
         ) {
-            // Pestañas principales
             composable(Screen.Dashboard.route) {
-                EstudiantesDashboardScreen(navController, viewModel)
+                DashboardScreen(navController, viewModel)
             }
             composable(Screen.Promedios.route) {
-                CalculoPromediosScreen(viewModel)
+                CalculoPromedioScreen(viewModel)
             }
-
-            // Pantalla de formulario (navegación profunda)
             composable(Screen.AgregarEstudiante.route) {
-                AgregarEstudianteScreen(navController, viewModel)
+                AgregarEstudiantesScreen(navController, viewModel)
             }
         }
     }
