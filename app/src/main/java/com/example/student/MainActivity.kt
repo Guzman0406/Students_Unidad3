@@ -15,14 +15,17 @@ import androidx.compose.ui.Modifier
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavDestination.Companion.hierarchy
 import androidx.navigation.NavGraph.Companion.findStartDestination
+import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import androidx.navigation.navArgument
 import com.example.student.navigation.Screen
 import com.example.student.ui.screens.AgregarEstudiantesScreen
 import com.example.student.ui.screens.CalculoPromedioScreen
 import com.example.student.ui.screens.DashboardScreen
+import com.example.student.ui.screens.EditarEstudianteScreen
 import com.example.student.ui.theme.StudentTheme
 import com.example.student.viewmodel.EstudiantesViewModel
 
@@ -50,7 +53,7 @@ fun MainApp(viewModel: EstudiantesViewModel = viewModel()) {
                 NavigationBarItem(
                     icon = { Icon(Icons.Filled.Person, contentDescription = "Estudiantes") },
                     label = { Text("Estudiantes") },
-                    selected = currentDestination?.route == Screen.Dashboard.route,
+                    selected = currentDestination?.hierarchy?.any { it.route == Screen.Dashboard.route } == true,
                     onClick = {
                         navController.navigate(Screen.Dashboard.route) {
                             popUpTo(navController.graph.findStartDestination().id) {
@@ -62,9 +65,9 @@ fun MainApp(viewModel: EstudiantesViewModel = viewModel()) {
                     }
                 )
                 NavigationBarItem(
-                    icon = { Icon(Icons.Filled.Assessment, contentDescription = "Promedios") }, // ✅ CORREGIDO
+                    icon = { Icon(Icons.Filled.Assessment, contentDescription = "Promedios") },
                     label = { Text("Promedios") },
-                    selected = currentDestination?.route == Screen.Promedios.route,
+                    selected = currentDestination?.hierarchy?.any { it.route == Screen.Promedios.route } == true,
                     onClick = {
                         navController.navigate(Screen.Promedios.route) {
                             popUpTo(navController.graph.findStartDestination().id) {
@@ -100,6 +103,17 @@ fun MainApp(viewModel: EstudiantesViewModel = viewModel()) {
             }
             composable(Screen.AgregarEstudiante.route) {
                 AgregarEstudiantesScreen(navController, viewModel)
+            }
+            composable(
+                route = Screen.EditarEstudiante.route,
+                arguments = listOf(navArgument("estudianteId") { type = NavType.StringType })
+            ) { backStackEntry ->
+                val estudianteId = backStackEntry.arguments?.getString("estudianteId")
+                EditarEstudianteScreen(
+                    navController = navController,
+                    viewModel = viewModel,
+                    estudianteId = estudianteId
+                )
             }
         }
     }

@@ -1,6 +1,5 @@
 package com.example.student.data
 
-
 data class Estudiante(
     val id: Int = 0,
     val nombre: String = "",

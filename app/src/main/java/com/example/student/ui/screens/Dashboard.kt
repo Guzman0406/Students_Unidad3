@@ -84,7 +84,7 @@ fun DashboardScreen(
                         EstudianteCard(
                             estudiante = estudiante,
                             onEdit = {
-
+                                navController.navigate(Screen.EditarEstudiante.createRoute(estudiante.id.toString()))
                             },
                             onDelete = {
                                 viewModel.eliminarEstudiante(estudiante.id)

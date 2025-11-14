@@ -15,7 +15,6 @@ class EstudiantesViewModel : ViewModel() {
 
     private var currentId = 1
 
-
     fun agregarEstudiante(estudiante: Estudiante) {
         viewModelScope.launch {
             val nuevaLista = _estudiantes.value.toMutableList()
